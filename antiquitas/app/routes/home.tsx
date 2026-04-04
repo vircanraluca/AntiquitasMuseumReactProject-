@@ -3,6 +3,7 @@ import type { Route } from "./+types/home";
 import Nav from "../components/Nav";
 import Hero from "../components/Hero";
 import ExhibitCard from "../components/ExhibitCard";
+import Modal from "../components/Modal";
 import type { Exhibit } from "../types/types";
 
 export function meta({}: Route.MetaArgs) {
@@ -14,6 +15,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const [exhibits, setExhibits] = useState<Exhibit[]>([]);
+  const [modal, setModal] = useState<Exhibit | null>(null);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -38,10 +40,12 @@ export default function Home() {
         </div>
         <div className="exhibits-grid">
           {exhibits.map(e => (
-            <ExhibitCard key={e.id} exhibit={e} onClick={() => {}} />
+            <ExhibitCard key={e.id} exhibit={e} onClick={setModal} />
           ))}
         </div>
       </section>
+
+      <Modal exhibit={modal} onClose={() => setModal(null)} />
     </div>
   );
 }
