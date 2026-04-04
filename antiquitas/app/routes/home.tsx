@@ -4,11 +4,11 @@ import Nav from "../components/Nav";
 import Hero from "../components/Hero";
 import ExhibitCard from "../components/ExhibitCard";
 import Modal from "../components/Modal";
-import type { Exhibit } from "../types/types";
 import Timeline from "../components/Timeline";
-import type { TimelineEvent } from "../types/types";
 import TicketSection from "../components/TicketSection";
-import type { TicketType } from "../types/types";
+import CartSidebar from "../components/CartSidebar";
+import type { CartItem } from "../components/CartSidebar";
+import type { Exhibit, TimelineEvent, TicketType } from "../types/types";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -19,32 +19,52 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const [exhibits, setExhibits] = useState<Exhibit[]>([]);
-  const [modal, setModal] = useState<Exhibit | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [modal, setModal] = useState<Exhibit | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    fetch('/api/exhibits')
-      .then(res => res.json())
-      .then(data => setExhibits(data));
-    
-    fetch('/api/timeline')
-      .then(res => res.json())
-      .then(data => setTimeline(data));
-    
-    fetch('/api/tickets')
-    .then(res => res.json())
-    .then(data => setTickets(data));
+    fetch('/api/exhibits').then(res => res.json()).then(setExhibits);
+    fetch('/api/timeline').then(res => res.json()).then(setTimeline);
+    fetch('/api/tickets').then(res => res.json()).then(setTickets);
   }, []);
-  
+
+  const addToCart = (item: CartItem) => setCart(p => [...p, item]);
+  const removeFromCart = (id: string) => setCart(p => p.filter(i => i.id !== id));
+
+  const handleCheckout = async () => {
+    if (cart.length === 0) return;
+
+    const visit_date = cart[0].visit_date;
+    const items = cart.map(i => ({
+      ticket_type_id: i.ticket_type_id,
+      quantity: i.quantity,
+      unit_price: i.unit_price,
+    }));
+
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visit_date, items }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setCart([]);
+      setCartOpen(false);
+      alert(`Booking confirmed! Reference: #${data.bookingId}`);
+    }
+  };
 
   return (
     <div>
-      <Nav onNav={scrollTo} />
+      <Nav onNav={scrollTo} cartCount={cart.length} onCart={() => setCartOpen(true)} />
       <Hero onNav={scrollTo} />
 
       <section id="exhibits">
@@ -75,12 +95,19 @@ export default function Home() {
           <h2 className="section-title">Book Tickets</h2>
           <p className="section-desc">Choose your ticket type, select a date, and add to your cart</p>
         </div>
-        <TicketSection tickets={tickets} />
+        <TicketSection tickets={tickets} onAdd={addToCart} />
       </section>
 
-      <Modal exhibit={modal} onClose={() => setModal(null)} />
-
       <footer>◈  ANTIQUITAS · Virtual Museum · Academic Project  ◈</footer>
+
+      <Modal exhibit={modal} onClose={() => setModal(null)} />
+      <CartSidebar
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        items={cart}
+        onRemove={removeFromCart}
+        onCheckout={handleCheckout}
+      />
     </div>
   );
 }

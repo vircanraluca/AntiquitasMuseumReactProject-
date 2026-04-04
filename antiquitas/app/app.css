@@ -211,3 +211,17 @@
     background: radial-gradient(circle, rgba(201,168,76,0.04) 0%, transparent 70%);
     pointer-events: none; z-index: 0; transform: translate(-50%, -50%);
   }
+
+  .cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.cart-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}

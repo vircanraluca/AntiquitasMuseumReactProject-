@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { TicketType } from "../types/types";
+import type { CartItem } from "./CartSidebar";
 
-export default function TicketSection({ tickets }: { tickets: TicketType[] }) {
+export default function TicketSection({ tickets, onAdd }: { tickets: TicketType[]; onAdd: (item: CartItem) => void }) {
   const [qtys, setQtys] = useState<Record<string, number>>({});
   const [date, setDate] = useState('');
   const today = new Date().toISOString().split('T')[0];
@@ -12,6 +13,22 @@ export default function TicketSection({ tickets }: { tickets: TicketType[] }) {
 
   const total = tickets.reduce((s, t) => s + t.price * (qtys[t.id] || 0), 0);
   const anyQty = Object.values(qtys).some(v => v > 0);
+
+  const handleAdd = () => {
+    if (!anyQty || !date) return;
+    tickets.filter(t => (qtys[t.id] || 0) > 0).forEach(t => {
+      onAdd({
+        id: `${t.id}-${date}-${Date.now()}`,
+        ticket_type_id: t.id,
+        name: `${t.name} Ticket`,
+        quantity: qtys[t.id],
+        unit_price: t.price,
+        visit_date: date,
+      });
+    });
+    setQtys({});
+    setDate('');
+  };
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
@@ -36,7 +53,7 @@ export default function TicketSection({ tickets }: { tickets: TicketType[] }) {
           <input type="date" min={today} value={date} onChange={e => setDate(e.target.value)}
             style={{ background: 'var(--stone)', border: '1px solid rgba(201,168,76,0.3)', color: 'var(--text-main)', padding: '.6rem 1rem', width: '100%', fontFamily: 'Cormorant Garamond, serif', fontSize: '1rem' }} />
         </div>
-        <button disabled={!anyQty || !date}
+        <button onClick={handleAdd} disabled={!anyQty || !date}
           style={{ width: '100%', marginTop: '1.5rem', padding: '.9rem', background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)', fontFamily: 'Cinzel, serif', fontSize: '11px', letterSpacing: '.3em', textTransform: 'uppercase', cursor: 'pointer', opacity: (!anyQty || !date) ? 0.4 : 1 }}>
           Add to Cart
         </button>
