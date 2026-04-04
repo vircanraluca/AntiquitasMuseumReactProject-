@@ -7,4 +7,9 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  server: {
+    proxy: {
+      "/api": "http://localhost:5000", // redirecționează /api/* spre backend
+    },
+  },
 });
