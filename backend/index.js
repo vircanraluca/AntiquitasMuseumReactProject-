@@ -16,5 +16,11 @@ app.get('/api/exhibits', async (req, res) => {
   res.json(exhibits);
 });
 
+app.get('/api/timeline', async (req, res) => {
+  const [rows] = await db.query('SELECT * FROM timeline_events ORDER BY sort_order');
+  res.json(rows);
+});
+
+
 const PORT=process.env.PORT||5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
