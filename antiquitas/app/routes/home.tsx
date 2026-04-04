@@ -7,6 +7,8 @@ import Modal from "../components/Modal";
 import type { Exhibit } from "../types/types";
 import Timeline from "../components/Timeline";
 import type { TimelineEvent } from "../types/types";
+import TicketSection from "../components/TicketSection";
+import type { TicketType } from "../types/types";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -19,6 +21,7 @@ export default function Home() {
   const [exhibits, setExhibits] = useState<Exhibit[]>([]);
   const [modal, setModal] = useState<Exhibit | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [tickets, setTickets] = useState<TicketType[]>([]);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -32,6 +35,10 @@ export default function Home() {
     fetch('/api/timeline')
       .then(res => res.json())
       .then(data => setTimeline(data));
+    
+    fetch('/api/tickets')
+    .then(res => res.json())
+    .then(data => setTickets(data));
   }, []);
   
 
@@ -62,7 +69,18 @@ export default function Home() {
         <Timeline events={timeline} />
       </section>
 
+      <section id="tickets">
+        <div className="section-header">
+          <span className="section-tag">Plan Your Visit</span>
+          <h2 className="section-title">Book Tickets</h2>
+          <p className="section-desc">Choose your ticket type, select a date, and add to your cart</p>
+        </div>
+        <TicketSection tickets={tickets} />
+      </section>
+
       <Modal exhibit={modal} onClose={() => setModal(null)} />
+
+      <footer>◈  ANTIQUITAS · Virtual Museum · Academic Project  ◈</footer>
     </div>
   );
 }
