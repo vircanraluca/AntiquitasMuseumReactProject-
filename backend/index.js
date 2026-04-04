@@ -26,5 +26,31 @@ app.get('/api/tickets', async (req, res) => {
   res.json(rows);
 });
 
+app.post('/api/bookings', async (req, res) => {
+  const { visit_date, items } = req.body;
+
+  if (!visit_date || !items || items.length === 0) {
+    return res.status(400).json({ error: 'Missing data' });
+  }
+
+  const total = items.reduce((s, item) => s + item.unit_price * item.quantity, 0);
+
+  const [result] = await db.query(
+    'INSERT INTO bookings (visit_date, total_price, status) VALUES (?, ?, ?)',
+    [visit_date, total, 'confirmed']
+  );
+
+  const bookingId = result.insertId;
+
+  for (const item of items) {
+    await db.query(
+      'INSERT INTO booking_items (booking_id, ticket_type_id, quantity, unit_price) VALUES (?, ?, ?, ?)',
+      [bookingId, item.ticket_type_id, item.quantity, item.unit_price]
+    );
+  }
+
+  res.json({ success: true, bookingId });
+});
+
 const PORT=process.env.PORT||5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
